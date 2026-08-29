@@ -1,28 +1,44 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TextInput, Pressable } from 'react-native';
-import { useState } from 'react';
-import { Video, ResizeMode } from 'expo-av';
+import { useState, useEffect } from 'react';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 export default function App() {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
 
+  const player = useVideoPlayer(require('./assets/background.mp4'), (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+
+  // Asegura que empiece a reproducirse en cuanto el componente se monte
+  useEffect(() => {
+    const subscription = player.addListener('statusChange', (status) => {
+      if (status.status === 'readyToPlay' && !player.playing) {
+        player.play();
+      }
+    });
+
+    player.play();
+
+    return () => {
+      subscription.remove();
+    };
+  }, [player]);
+
   return (
     <View style={styles.container}>
-
-      <Video
-        source={require('./assets/background.mp4')}
-        style={StyleSheet.absoluteFillObject}
-        resizeMode={ResizeMode.COVER}
-        isLooping
-        isMuted
-        shouldPlay
+      <VideoView
+        player={player}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        nativeControls={false}
       />
-
 
       <View style={styles.content}>
         <Text style={styles.titulo}>Prueba Beta</Text>    
-
         <Text style={styles.subtitulo}>Bienvenido</Text>
 
         <TextInput
@@ -79,22 +95,22 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '80%',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 6,
-    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    padding: 12,
     marginBottom: 12,
     color: '#fff',
   },
   pressable: {
     backgroundColor: '#6f00ff',
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     marginTop: 20,
     width: '80%',
     alignItems: 'center',
   },
   textoBoton: {
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });
